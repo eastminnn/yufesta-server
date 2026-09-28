@@ -19,6 +19,7 @@ public enum ErrorCode {
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", "요청한 리소스를 찾을 수 없습니다."),
     PHOTO_TOO_LARGE(HttpStatus.CONTENT_TOO_LARGE, "PHOTO_TOO_LARGE", "파일 크기가 너무 큽니다."),
     CONTENT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "CONTENT_NOT_ALLOWED", "등록할 수 없는 내용이에요."),
+    RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "RATE_LIMITED", "잠시 후 다시 시도해 주세요."),
 
     // 인증 및 인가 오류
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "인증이 필요합니다."),
