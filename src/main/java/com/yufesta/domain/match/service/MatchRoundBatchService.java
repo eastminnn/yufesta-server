@@ -20,6 +20,7 @@ import com.yufesta.domain.match.repository.ApplicationRepository;
 import com.yufesta.domain.match.repository.BlockRepository;
 import com.yufesta.domain.match.repository.MatchRepository;
 import com.yufesta.domain.match.repository.MatchRoundRepository;
+import com.yufesta.domain.notice.service.NoticeService;
 import com.yufesta.domain.timetable.entity.TimetableSlot;
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -50,6 +51,7 @@ public class MatchRoundBatchService {
     private final MatchRepository matchRepository;
     private final BlockRepository blockRepository;
     private final AppSettingReader appSettingReader;
+    private final NoticeService noticeService;
     private final Clock clock;
     private final MatchingEngine engine = new MatchingEngine();
 
@@ -59,6 +61,7 @@ public class MatchRoundBatchService {
             MatchRepository matchRepository,
             BlockRepository blockRepository,
             AppSettingReader appSettingReader,
+            NoticeService noticeService,
             Clock clock
     ) {
         this.matchRoundRepository = matchRoundRepository;
@@ -66,6 +69,7 @@ public class MatchRoundBatchService {
         this.matchRepository = matchRepository;
         this.blockRepository = blockRepository;
         this.appSettingReader = appSettingReader;
+        this.noticeService = noticeService;
         this.clock = clock;
     }
 
@@ -112,6 +116,7 @@ public class MatchRoundBatchService {
             }
             log.info("회차 {} 발표: {}건 이월, 회차 {} {}", round.getSeq(), carried, next.getSeq(), next.getStatus());
         });
+        noticeService.createMatchResultPublished(round.getSeq());
         return AdminMatchRoundResponse.from(round);
     }
 

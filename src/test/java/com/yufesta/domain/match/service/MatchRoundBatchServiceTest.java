@@ -25,6 +25,7 @@ import com.yufesta.domain.match.repository.BlockRepository;
 import com.yufesta.domain.match.repository.MatchRepository;
 import com.yufesta.domain.match.repository.MatchRoundRepository;
 import com.yufesta.domain.match.repository.UserIdPair;
+import com.yufesta.domain.notice.service.NoticeService;
 import com.yufesta.domain.user.entity.User;
 import com.yufesta.domain.user.enums.OAuthProvider;
 import com.yufesta.domain.user.enums.UserRole;
@@ -66,6 +67,9 @@ class MatchRoundBatchServiceTest {
     @Mock
     private AppSettingReader appSettingReader;
 
+    @Mock
+    private NoticeService noticeService;
+
     private MatchRoundBatchService service;
     private MatchRound round1;
     private MatchRound round2;
@@ -79,7 +83,7 @@ class MatchRoundBatchServiceTest {
     void setUp() {
         service = new MatchRoundBatchService(
                 matchRoundRepository, applicationRepository, matchRepository, blockRepository, appSettingReader,
-                Clock.fixed(NOW.atZone(KST).toInstant(), KST)
+                noticeService, Clock.fixed(NOW.atZone(KST).toInstant(), KST)
         );
         round1 = round(1L, 1, PUBLISH_1);
         round2 = round(2L, 2, PUBLISH_2);
@@ -239,6 +243,7 @@ class MatchRoundBatchServiceTest {
         assertThat(round1.getStatus()).isEqualTo(RoundStatus.PUBLISHED);
         assertThat(round1.getPublishedAt()).isEqualTo(NOW);
         assertThat(round2.getStatus()).isEqualTo(RoundStatus.OPEN);
+        verify(noticeService).createMatchResultPublished(1);
 
         ArgumentCaptor<List<Application>> captor = ArgumentCaptor.forClass(List.class);
         verify(applicationRepository).saveAll(captor.capture());
@@ -284,6 +289,7 @@ class MatchRoundBatchServiceTest {
 
         assertThat(round2.getStatus()).isEqualTo(RoundStatus.PUBLISHED);
         verify(applicationRepository, never()).saveAll(anyList());
+        verify(noticeService).createMatchResultPublished(2);
     }
 
     @Test
@@ -293,6 +299,7 @@ class MatchRoundBatchServiceTest {
 
         assertError(() -> service.publish(1L), ErrorCode.MATCH_ROUND_INVALID_STATUS);
         assertThat(round1.getStatus()).isEqualTo(RoundStatus.OPEN);
+        verify(noticeService, never()).createMatchResultPublished(org.mockito.ArgumentMatchers.anyInt());
     }
 
     @Test
