@@ -8,6 +8,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.yufesta.common.cache.PublicCacheEvictor;
 import com.yufesta.common.exception.CustomException;
 import com.yufesta.common.exception.error.ErrorCode;
 import com.yufesta.domain.appsetting.enums.SettingKey;
@@ -68,6 +69,9 @@ class MatchRoundBatchServiceTest {
     private AppSettingReader appSettingReader;
 
     @Mock
+    private PublicCacheEvictor cacheEvictor;
+
+    @Mock
     private NoticeService noticeService;
 
     private MatchRoundBatchService service;
@@ -83,7 +87,7 @@ class MatchRoundBatchServiceTest {
     void setUp() {
         service = new MatchRoundBatchService(
                 matchRoundRepository, applicationRepository, matchRepository, blockRepository, appSettingReader,
-                noticeService, Clock.fixed(NOW.atZone(KST).toInstant(), KST)
+                cacheEvictor, noticeService, Clock.fixed(NOW.atZone(KST).toInstant(), KST)
         );
         round1 = round(1L, 1, PUBLISH_1);
         round2 = round(2L, 2, PUBLISH_2);
@@ -276,6 +280,8 @@ class MatchRoundBatchServiceTest {
         verify(applicationRepository).saveAll(captor.capture());
         assertThat(captor.getValue()).isEmpty();
         assertThat(round2.getStatus()).isEqualTo(RoundStatus.OPEN);
+        // 발표는 홈이 기다리는 순간이라 요약 캐시 TTL(2초)을 기다리게 두면 안 된다
+        verify(cacheEvictor).evictMatchSummary();
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.yufesta.common.cache;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -35,6 +36,7 @@ class ResponseCacheTest {
     private static final Instant NOW = Instant.parse("2026-10-02T15:00:00Z");
     private static final String KEY = "timetable";
     private static final String FULL_KEY = "yufesta:v1:timetable";
+    private static final String LOCK_KEY = "yufesta:lock:yufesta:v1:timetable";
     private static final Duration TTL = Duration.ofSeconds(10);
 
     @Mock
@@ -110,6 +112,40 @@ class ResponseCacheTest {
     }
 
     @Test
+    void 재계산이_끝나면_락을_돌려준다() {
+        long expired = NOW.toEpochMilli() - 1_000;
+        when(valueOps.get(FULL_KEY)).thenReturn(expired + "\n옛 값");
+        when(valueOps.setIfAbsent(anyString(), eq("1"), any(Duration.class))).thenReturn(true);
+
+        cache.get(KEY, TTL, () -> "새 값");
+
+        // 돌려주지 않으면 신선 기간이 락 제한보다 짧은 키가 락 제한 주기로만 갱신된다
+        verify(redis).delete(LOCK_KEY);
+    }
+
+    @Test
+    void 원본_계산이_실패하면_락을_남겨_재시도_간격으로_쓴다() {
+        long expired = NOW.toEpochMilli() - 1_000;
+        when(valueOps.get(FULL_KEY)).thenReturn(expired + "\n옛 값");
+        when(valueOps.setIfAbsent(anyString(), eq("1"), any(Duration.class))).thenReturn(true);
+
+        assertThatThrownBy(() -> cache.get(KEY, TTL, () -> {
+            throw new IllegalStateException("DB 장애");
+        })).isInstanceOf(IllegalStateException.class);
+
+        verify(redis, never()).delete(LOCK_KEY);
+    }
+
+    @Test
+    void 값이_없어_락_없이_계산한_요청은_락을_건드리지_않는다() {
+        when(valueOps.get(FULL_KEY)).thenReturn(null);
+
+        cache.get(KEY, TTL, () -> "새 값");
+
+        verify(redis, never()).delete(LOCK_KEY);
+    }
+
+    @Test
     void Redis가_죽어도_원본_경로로_응답한다() {
         when(valueOps.get(FULL_KEY)).thenThrow(new RedisConnectionFailureException("연결 실패"));
 
@@ -140,15 +176,26 @@ class ResponseCacheTest {
     }
 
     @Test
-    void 기동_예열은_연결을_맺어_보고_실패해도_예외를_던지지_않는다() {
-        when(redis.hasKey("yufesta:v1:warmup")).thenThrow(new RedisConnectionFailureException("연결 실패"));
+    void 커넥션_확인은_실패를_예외가_아니라_false로_알린다() {
+        when(redis.hasKey("yufesta:v1:ping")).thenThrow(new RedisConnectionFailureException("연결 실패"));
 
-        cache.warmUp();   // 예외가 새면 기동이 막힌다
+        assertThat(cache.ping()).isFalse();   // 예외가 새면 기동이 막힌다
 
-        verify(redis).hasKey("yufesta:v1:warmup");
-        // 캐시를 끄면 아예 건드리지 않는다
-        new ResponseCache(redis, properties(false), clock).warmUp();
-        verify(redis, org.mockito.Mockito.times(1)).hasKey(anyString());
+        verify(redis).hasKey("yufesta:v1:ping");
+    }
+
+    @Test
+    void 커넥션이_살아_있으면_true다() {
+        when(redis.hasKey("yufesta:v1:ping")).thenReturn(false);
+
+        assertThat(cache.ping()).isTrue();
+    }
+
+    @Test
+    void 캐시가_꺼져_있으면_확인할_커넥션도_없다() {
+        assertThat(new ResponseCache(redis, properties(false), clock).ping()).isTrue();
+
+        verify(redis, org.mockito.Mockito.never()).hasKey(anyString());
     }
 
     private static CacheProperties properties(boolean enabled) {
