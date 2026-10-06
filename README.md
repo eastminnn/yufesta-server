@@ -22,8 +22,9 @@
 | 운영자 기능 | 장소·공지·분실물·응원·신고 관리, 인스타팅 회차 운영과 결과 발표 |
 
 ## 축제 당일 운영 결과
-
 > 아래 수치는 팀 서비스 전체의 운영 결과입니다.
+
+<img width="1291" height="127" alt="Image" src="https://github.com/user-attachments/assets/8c5c162c-fa42-4283-a597-d67219a4eae8" />
 
 | 지표 | 결과 |
 |---|---:|
