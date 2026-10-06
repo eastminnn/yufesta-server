@@ -5,9 +5,11 @@
 [![Redis](https://img.shields.io/badge/Valkey-8-FF4438?logo=redis&logoColor=white)](https://valkey.io/)
 [![AWS](https://img.shields.io/badge/AWS-ECS%20Fargate-FF9900?logo=amazonwebservices&logoColor=white)](https://aws.amazon.com/ecs/)
 
-YU FESTA는 축제 방문객이 별도 앱 설치 없이 QR로 접속하여 공연 일정, 동아리 라인업, 축제 지도와 공지를 확인하고, 인스타팅 동행 매칭과 분실물·응원 게시판을 이용할 수 있는 서비스입니다.
+> YU FESTA는 축제 방문객이 별도 앱 설치 없이 QR로 접속하여 공연 일정, 동아리 라인업, 축제 지도와 공지를 확인하고, 인스타팅 동행 매칭과 분실물·응원 게시판을 이용할 수 있는 서비스입니다.
 
 - 운영 일자: 2026.10.02
+
+<img width="1600" height="900" alt="Image" src="https://github.com/user-attachments/assets/4a7c3ba4-85a5-491c-855d-0b4c528b85ea" />
 
 ## 핵심 기능
 
@@ -35,7 +37,7 @@ YU FESTA는 축제 방문객이 별도 앱 설치 없이 QR로 접속하여 공�
 축제 당일 2,080명이 방문해 총 30,100회의 페이지뷰를 기록했습니다. 회차별 신청은 1회차 218건, 2회차 314건, 현장에서 추가 운영한 3회차 168건으로 총 700건이 접수됐습니다.
 
 ## Architecture
-
+<img width="1800" height="1120" alt="Image" src="https://github.com/user-attachments/assets/431b44b1-82eb-48a8-b110-92cd98542e83" />
 
 ## Tech Stack
 
