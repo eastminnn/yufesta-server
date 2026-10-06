@@ -1,7 +1,4 @@
-# YU FESTA Backend
-
-> 대학 축제의 정보 탐색부터 동행 매칭, 현장 커뮤니티 운영까지 하나로 연결한 모바일 웹 서비스
-
+# YU FESTA - Backend
 [![Java](https://img.shields.io/badge/Java-17-007396?logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![MySQL](https://img.shields.io/badge/MySQL-8.4-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
@@ -10,10 +7,7 @@
 
 YU FESTA는 축제 방문객이 별도 앱 설치 없이 QR로 접속하여 공연 일정, 동아리 라인업, 축제 지도와 공지를 확인하고, 인스타팅 동행 매칭과 분실물·응원 게시판을 이용할 수 있는 서비스입니다.
 
-- 운영 기간: 2026 영남대학교 가을 대동제
-- 담당: 백엔드 개발
-- 원본 팀 저장소: [yu-festa/yufesta-server](https://github.com/yu-festa/yufesta-server)
-- API 서버: [https://api.yufesta.com](https://api.yufesta.com)
+- 운영 일자: 2026.10.02
 
 ## 핵심 기능
 
@@ -25,21 +19,23 @@ YU FESTA는 축제 방문객이 별도 앱 설치 없이 QR로 접속하여 공�
 | 콘텐츠 안전 | 개인정보·연락 유도 차단, 한국어 우회 표현 필터, 소형 LLM 문맥 분류, 작성 속도 제한 |
 | 운영자 기능 | 장소·공지·분실물·응원·신고 관리, 인스타팅 회차 운영과 결과 발표 |
 
+## 축제 당일 운영 결과
+
+> 아래 수치는 팀 서비스 전체의 운영 결과입니다.
+
+| 지표 | 결과 |
+|---|---:|
+| 방문 브라우저 | **2,080명** |
+| 세션 | **3,850회** |
+| 페이지뷰 | **30,100회** |
+| 중앙 체류 시간 | **9분 42초** |
+| 로그인 회원 | **653명** |
+| 회차별 누적 신청 | **700건** |
+
+축제 당일 2,080명이 방문해 총 30,100회의 페이지뷰를 기록했습니다. 회차별 신청은 1회차 218건, 2회차 314건, 현장에서 추가 운영한 3회차 168건으로 총 700건이 접수됐습니다.
+
 ## Architecture
 
-```mermaid
-flowchart LR
-    Client[Mobile Web] -->|HTTPS| ALB[AWS ALB]
-    ALB --> API[Spring Boot<br/>ECS Fargate]
-    API --> DB[(RDS MySQL)]
-    API --> Cache[(ElastiCache<br/>Valkey)]
-    API --> Storage[S3 + CloudFront]
-    API --> OpenAI[OpenAI<br/>Content Classifier]
-    API --> OAuth[Kakao / Google OAuth]
-
-    Actions[GitHub Actions] --> ECR[AWS ECR]
-    ECR --> API
-```
 
 ## Tech Stack
 
@@ -56,8 +52,6 @@ flowchart LR
 | Infra | Docker, AWS ECS Fargate, RDS, ElastiCache, ALB, ECR, Terraform, GitHub Actions OIDC |
 
 ## 담당한 작업
-
-팀 전체 기능과 구분하여, GitHub 계정 [`eastminnn`](https://github.com/eastminnn)이 구현하고 병합한 작업만 정리했습니다.
 
 ### 1. 인증과 공통 백엔드 기반
 
@@ -157,47 +151,3 @@ flowchart LR
 | Redis 속도 제한 장애 시 fail-open | 짧은 축제 운영 기간에 게시 기능 가용성을 우선 |
 | 신고 대상 Projection 일괄 조회 | 엔티티 전체 로딩과 연관관계 N+1을 피하고 필요한 상태만 조회 |
 | Flyway 기존 버전 수정 금지 | 이미 적용된 운영 이력의 checksum 충돌과 배포 실패 방지 |
-
-## Local Development
-
-### 요구 사항
-
-- Java 17
-- Docker / Docker Compose
-
-### 실행
-
-```bash
-cp .env.example .env
-# .env에 OAuth 및 JWT 환경변수 설정
-docker compose up -d --build
-```
-
-- API: `http://localhost:8080`
-- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
-- Health Check: `http://localhost:8080/actuator/health`
-
-### 테스트
-
-```bash
-./gradlew test --no-daemon
-```
-
-콘텐츠 필터 평가는 원문이 저장소나 결과 보고서에 남지 않는 비공개 JSONL 데이터셋으로 실행합니다.
-
-```bash
-./gradlew moderationEvaluation \
-  -PmoderationDataset=/path/to/private-dataset.jsonl
-```
-
-## Documents
-
-- [Software Requirements Specification](docs/srs.md)
-- [ERD](docs/erd.md)
-- [Database DDL](docs/erd.sql)
-- [Load Test Guide and Results](load/README.md)
-- [Festival Day Runbook](docs/festival-day-runbook.md)
-
-## Contribution References
-
-개인 기여 범위는 원본 팀 저장소에서 `author:eastminnn`으로 병합된 기능·수정·성능 개선 PR을 기준으로 작성했습니다. 팀원의 인스타팅 매칭 엔진, 타임테이블·라인업, 캐시·SSE·AWS 인프라 개선은 서비스 전체 기능과 아키텍처에만 포함하고 개인 구현으로 표기하지 않았습니다.
